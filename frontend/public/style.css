@@ -1,0 +1,518 @@
+:root {
+    --bg-color: #1e1e1e;       /* Fundo geral */
+    --panel-bg: #252526;       /* Fundo dos painéis */
+    --border-color: #3e3e42;   /* Bordas sutis */
+    --accent-color: #9200cc;   /* Azul VSCode */
+    --text-primary: #cccccc;   /* Texto principal */
+    --text-secondary: #858585; /* Texto secundário */
+    --editor-bg: #1e1e1e;      /* Fundo do textarea */
+    --upload-hover-bg: #885780; /* Fundo do upload ao passar o mouse */
+    --font-ui: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-code: 'Consolas', 'Courier New', monospace;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+/* Garante que o container ocupe a tela toda */
+html, body {
+    height: 100%;
+    margin: 0;
+    overflow: hidden; /* Evita barra de rolagem dupla */
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-ui);
+    height: 100vh;
+    overflow: hidden;
+}
+
+/* Utilitários */
+.hidden { display: none !important; }
+.icon-large { font-size: 64px !important; color: var(--accent-color); margin-bottom: 20px; }
+
+/* TELA DE UPLOAD */
+.container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+/* REGRA ATUALIZADA */
+.upload-box {
+    background-color: var(--panel-bg);
+    border: 2px dashed var(--border-color);
+    padding: 60px;
+    border-radius: 12px;
+    
+    /* Substituímos 'text-align: center' por um layout flex completo */
+    display: flex;
+    flex-direction: column; /* Empilha os itens verticalmente */
+    align-items: center;    /* Centraliza os itens horizontalmente */
+    justify-content: center; /* Garante alinhamento vertical central */
+    
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.upload-box:hover {
+    border-color: var(--accent-color);
+    background-color: #2a2d2e;
+}
+
+.upload-box h2 { font-weight: 500; margin-bottom: 10px; }
+.upload-box p { color: var(--text-secondary); margin-bottom: 25px; }
+
+/* BOTÕES */
+button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s;
+}
+
+.btn-primary { background-color: var(--accent-color); color: white; }
+.btn-primary:hover { background-color: #3f944e; }
+
+.btn-secondary { background-color: transparent; color: var(--text-primary); border: 1px solid var(--border-color); }
+.btn-secondary:hover { background-color: var(--upload-hover-bg); }
+
+/* TELA DO EDITOR */
+.editor-container { height: 100vh; display: flex; flex-direction: column; }
+
+.toolbar {
+    height: 60px; /* Aumentei um pouco a altura para dar mais respiro */
+    background-color: #333333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    border-bottom: 1px solid var(--border-color);
+    flex-shrink: 0; /* Garante que a toolbar não encolha */
+    z-index: 1;
+}
+
+.logo { font-weight: bold; font-size: 18px; letter-spacing: 1px; display: flex; align-items: center; }
+.badge { font-size: 10px; background: var(--accent-color); color: white; padding: 2px 6px; border-radius: 4px; margin-left: 12px; font-weight: normal;}
+
+/* --- CORREÇÃO DE ALINHAMENTO DOS BOTÕES --- */
+.actions {
+    display: flex;
+    align-items: center;
+    gap: 12px; /* Espaço consistente entre os botões */
+}
+
+
+.split-view {
+    display: flex;
+    flex: 1;
+    overflow: hidden;
+}
+
+.panel {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    border-right: 1px solid var(--border-color);
+}
+
+.panel-header {
+    background-color: var(--panel-bg);
+    padding: 11.5px 20px;
+    font-size: 12px;
+    text-transform: uppercase;
+    color: var(--text-secondary);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.content-viewer {
+    flex: 1;
+    background-color: #1a1a1a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    overflow: auto;
+    padding: 20px;
+}
+
+.content-viewer img { max-width: 100%; box-shadow: 0 0 20px rgba(0,0,0,0.5); }
+
+#text-editor {
+    flex: 1;
+    background-color: var(--editor-bg);
+    color: #d4d4d4;
+    border: none;
+    resize: none;
+    padding: 20px;
+    font-family: var(--font-code);
+    font-size: 14px;
+    line-height: 1.6;
+    outline: none;
+    z-index: 1;
+}
+
+/* --- TELA DE LOADING --- */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(30, 30, 30, 0.95); /* Fundo escuro quase opaco */
+    z-index: 9999; /* Fica acima de tudo */
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(5px); /* Efeito de desfoque moderno */
+}
+
+/* O círculo giratório */
+.spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid var(--border-color); /* Borda cinza */
+    border-top: 4px solid var(--accent-color); /* Borda azul giratória */
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading-overlay p {
+    font-size: 18px;
+    color: var(--text-primary);
+    font-weight: 500;
+    margin-bottom: 8px;
+}
+
+.loading-subtext {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* --- BARRA DE FERRAMENTAS DO EDITOR --- */
+
+/* Ajusta o cabeçalho para permitir botões na direita */
+.toolbar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    height: 40px; /* Altura fixa para alinhar */
+    padding: 0 10px;
+}
+
+.editor-tools {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Botões da ferramenta (ícones pequenos e discretos) */
+.tool-btn {
+    background: transparent;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.tool-btn:hover {
+    background-color: #3e3e42; /* Cinza claro ao passar o mouse */
+    color: var(--text-primary);
+}
+
+.tool-btn span {
+    font-size: 18px; /* Ícones menores que o upload */
+}
+
+/* Divisória vertical pequena */
+.divider-vertical {
+    width: 1px;
+    height: 16px;
+    background-color: var(--border-color);
+    margin: 0 4px;
+}
+
+/* --- RODAPÉ DO EDITOR (STATUS BAR) --- */
+.editor-footer {
+    height: 25px;
+    background-color: var(--accent-color); /* Azul VSCode */
+    color: white;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    gap: 20px;
+    font-family: var(--font-ui);
+}
+
+/* --- LAYOUT GLOBAL --- */
+.app-layout {
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.main-content {
+    flex: 1; /* Ocupa o resto da tela */
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-color);
+    transition: margin-left 0.3s ease;
+    margin-left: 0;
+    min-width: 0;
+}
+
+/* --- SIDEBAR --- */
+.sidebar {
+    width: 250px;
+    background-color: #252526; /* Cor padrão sidebar VSCode */
+    /*border-right: 1px solid var(--border-color);*/
+    border-radius: 4px solid var(--border-color);
+    display: flex;
+    flex-direction: column;
+    transition: transform 0.3s ease, width 0.3s ease;
+    flex-shrink: 0;
+}
+
+.sidebar.closed {
+    width: 0;
+    transform: translateX(-100%);
+    border: 1px solid var(--border-color);
+}
+
+.sidebar-header {
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: bold;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background-color: #1a1a1a;
+    border-radius: 4px;
+    border-color: var(--border-color);
+    border-style: solid;
+    border-width: 1px;
+}
+
+.sidebar-header button {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: color 0.2s, background 0.2s, transform 0.1s;
+    border-radius: 4px;
+    padding: 4px;
+}
+.sidebar-header button:hover {
+    color: var(--accent-color);
+    background: #23232a;
+}
+.sidebar-header button:active {
+    color: #fff;
+    background: var(--accent-color);
+    transform: scale(0.92);
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.sidebar-toggle {
+    background: #1a1a1a;
+    border: none;
+    color: var(--text-secondary);
+    padding: 5px 12px 5px 8px;
+    cursor: pointer;
+    border: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: background 0.2s, color 0.2s;
+}
+.sidebar-toggle .sidebar-label {
+    color: var(--text-secondary);
+    font-size: 13px;
+    white-space: nowrap;
+    opacity: 0.85;
+    transition: color 0.2s;
+}
+.sidebar-toggle:hover {
+    background: #333347;
+}
+.sidebar-toggle:hover .sidebar-label {
+    color: var(--accent-color);
+}
+
+/* Botão Flutuante para abrir quando fechado */
+.sidebar-trigger {
+    position: initial;
+    top: 10px;
+    left: 10px;
+    z-index: 100;
+    background: #333;
+    border: 1px solid var(--border-color);
+    color: white;
+    padding: 4px;
+    border-radius: 4px;
+    cursor: pointer;
+}
+.sidebar-trigger:hover { background: var(--accent-color); }
+
+/* BOTÃO DE ABRIR SIDEBAR (RETRAÍDO) - PAINEL LATERAL, NÃO SOBREPOSTO */
+#btn-open-sidebar.sidebar-trigger {
+    position: relative;
+    top: 0;
+    left: 0;
+    width: 38px;
+    min-width: 38px;
+    height: 100vh;
+    background: #252526; /* Mesma cor da sidebar */
+    border: none;
+    border-right: var(--border-color) solid 1px;
+    border-radius: 0 10px 10px 0;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.07);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    z-index: 1;
+    padding-top: 16px;
+    transition: left 0.2s;
+}
+#btn-open-sidebar.sidebar-trigger span.material-symbols-outlined {
+    font-size: 28px;
+    color: var(--accent-color, #9200cc);
+    margin-bottom: 0;
+}
+#btn-open-sidebar.sidebar-trigger.hidden {
+    display: none !important;
+}
+
+/* Quando a sidebar está fechada, main-content ocupa toda a tela, mas o botão retraído permanece na lateral */
+.sidebar.closed ~ #btn-open-sidebar.sidebar-trigger {
+    display: flex;
+}
+
+/* Remove sobreposição do botão sobre cabeçalho/editor */
+.editor-container, .toolbar {
+    z-index: 1;
+}
+
+/* --- LISTA DE ARQUIVOS --- */
+#file-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.file-item {
+    padding: 8px 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    font-size: 13px;
+    color: #cccccc;
+    border-left: 2px solid transparent;
+}
+
+.file-item:hover {
+    background-color: #2a2d2e;
+    color: white;
+}
+
+.file-item.active {
+    background-color: #37373d;
+    border-left-color: var(--accent-color);
+}
+
+.file-name {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 170px;
+}
+
+.btn-delete-file {
+    background: none;
+    border: none;
+    color: #d84545; /* Vermelho suave */
+    opacity: 0;
+    transition: opacity 0.2s;
+    padding: 2px;
+}
+
+.file-item:hover .btn-delete-file {
+    opacity: 1; /* Só mostra o lixo ao passar o mouse */
+}
+
+.spin {
+    animation: spin 1s linear infinite;
+}
+
+
+/* --- MODAIS --- */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.7);
+    z-index: 2000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    backdrop-filter: blur(2px);
+}
+
+.modal-box {
+    background-color: var(--panel-bg);
+    padding: 30px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    width: 350px;
+    text-align: center;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+}
+
+.modal-box h3 { margin-bottom: 10px; color: var(--text-primary); }
+.modal-box p { margin-bottom: 25px; color: var(--text-secondary); font-size: 14px; }
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 12px;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.btn-text:hover { color: var(--text-primary); }
