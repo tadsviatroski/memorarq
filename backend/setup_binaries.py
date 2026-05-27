@@ -17,7 +17,6 @@ TESSDATA_POR_URL = "https://raw.githubusercontent.com/tesseract-ocr/tessdata/mai
 def download_file(url, dest):
     print(f" -> Baixando {url.split('/')[-1]} (Isso pode levar alguns minutos)...")
     
-    # Ignora bloqueios de certificado SSL e força perfil de navegador
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
@@ -31,46 +30,73 @@ def download_file(url, dest):
     except Exception as e:
         print(f"\n[ERRO FATAL] Ocorreu um problema de rede: {e}")
         print(f"Não foi possível baixar automaticamente. Por favor, acesse o link abaixo no seu navegador:\n{url}")
-        print(f"Salve o arquivo dentro da pasta 'bin' do projeto.")
+        print(f"Salve o arquivo dentro da pasta 'bin' do projeto como '{os.path.basename(dest)}'.")
         import sys
         sys.exit(1)
 
 def setup_poppler():
     poppler_dir = os.path.join(BIN_DIR, 'poppler')
+    # 1. VERIFICAÇÃO INTELIGENTE
     if os.path.exists(os.path.join(poppler_dir, 'Library', 'bin', 'pdftoppm.exe')):
         return
 
-    print("\n[SETUP] Poppler ausente. Iniciando instalacao automatica...")
+    print("\n[SETUP] Poppler ausente ou incompleto. Iniciando instalacao automatica...")
     os.makedirs(BIN_DIR, exist_ok=True)
     zip_path = os.path.join(BIN_DIR, 'poppler.zip')
     
-    download_file(POPPLER_URL, zip_path)
+    if not os.path.exists(zip_path):
+        download_file(POPPLER_URL, zip_path)
     
     print(" -> Extraindo Poppler...")
     with zipfile.ZipFile(zip_path, 'r') as zip_ref:
         zip_ref.extractall(BIN_DIR)
     
-    extracted_folder = os.path.join(BIN_DIR, 'poppler-24.02.0-0')
-    if os.path.exists(extracted_folder):
-        if os.path.exists(poppler_dir):
-            shutil.rmtree(poppler_dir) 
-        os.rename(extracted_folder, poppler_dir)
-        
-    os.remove(zip_path)
+    # 2. RENOMEAÇÃO DINÂMICA (Encontra qualquer variação de nome "poppler-24...")
+    for item in os.listdir(BIN_DIR):
+        item_path = os.path.join(BIN_DIR, item)
+        if item.startswith('poppler-') and os.path.isdir(item_path):
+            if os.path.exists(poppler_dir):
+                shutil.rmtree(poppler_dir) 
+            os.rename(item_path, poppler_dir)
+            break
+            
+    if os.path.exists(zip_path):
+        os.remove(zip_path)
     print(" -> Poppler instalado com sucesso.")
 
 def setup_tesseract():
     tesseract_dir = os.path.join(BIN_DIR, 'Tesseract-OCR')
-    if not os.path.exists(os.path.join(tesseract_dir, 'tesseract.exe')):
-        print("\n[SETUP] Tesseract ausente. Iniciando instalacao automatica portatil...")
+    tesseract_exe = os.path.join(tesseract_dir, 'tesseract.exe')
+    
+    # 1. VERIFICAÇÃO DIRETA DO EXECUTÁVEL
+    if not os.path.exists(tesseract_exe):
+        print("\n[SETUP] Tesseract ausente ou incompleto. Iniciando instalacao automatica portatil...")
         os.makedirs(BIN_DIR, exist_ok=True)
         installer_path = os.path.join(BIN_DIR, 'tesseract_installer.exe')
         
-        download_file(TESSERACT_URL, installer_path)
+        if not os.path.exists(installer_path):
+            download_file(TESSERACT_URL, installer_path)
         
         print(" -> Instalando Tesseract silenciosamente na pasta bin...")
-        subprocess.run([installer_path, '/S', f'/D={tesseract_dir}'], check=True)
-        os.remove(installer_path)
+        
+        # 2. EXECUÇÃO EM SHELL PARA EVITAR ASPAS NO PARÂMETRO /D
+        cmd = f'"{installer_path}" /S /D={tesseract_dir}'
+        subprocess.run(cmd, shell=True, check=True)
+        
+        if os.path.exists(installer_path):
+            os.remove(installer_path)
+            
+        # 3. PLANO B (Caso o instalador burle o comando e instale globalmente)
+        if not os.path.exists(tesseract_exe):
+            print(" -> [AVISO] O instalador usou rota global. Copiando para a pasta portátil...")
+            default_path = r"C:\Program Files\Tesseract-OCR"
+            if os.path.exists(default_path):
+                shutil.copytree(default_path, tesseract_dir, dirs_exist_ok=True)
+            else:
+                print(" -> [ERRO FATAL] Tesseract não foi encontrado após a instalação.")
+                import sys
+                sys.exit(1)
+                
         print(" -> Tesseract instalado.")
         
     tessdata_dir = os.path.join(tesseract_dir, 'tessdata')
