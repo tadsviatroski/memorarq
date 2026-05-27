@@ -10,8 +10,9 @@ class BertCorrector:
         self.device = "cuda" if torch.cuda.is_available() else "cpu"
         print(f"Dispositivo de Inferência: {self.device.upper()}")
         
-        self.tokenizer = BertTokenizer.from_pretrained('neuralmind/bert-base-portuguese-cased')
-        self.model = BertForMaskedLM.from_pretrained('neuralmind/bert-base-portuguese-cased')
+        # Carrega o modelo e o tokenizador
+        self.tokenizer = BertTokenizer.from_pretrained('neuralmind/bert-large-portuguese-cased')
+        self.model = BertForMaskedLM.from_pretrained('neuralmind/bert-large-portuguese-cased')
         self.model.to(self.device)
         self.model.eval()
         

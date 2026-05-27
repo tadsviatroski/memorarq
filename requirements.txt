@@ -1,0 +1,14 @@
+fastapi
+uvicorn
+python-multipart
+torch
+transformers
+pyspellchecker
+Levenshtein
+pytesseract
+pdfplumber
+pdf2image
+Pillow
+opencv-python
+numpy
+reportlab

@@ -3,11 +3,17 @@ import pdfplumber
 from pdf2image import convert_from_path
 from PIL import Image
 import os
-from .preprocessing import preprocess_image # <--- IMPORT NOVO
+from .preprocessing import preprocess_image
 
-# --- CONFIGURAÇÃO WINDOWS ---
-# pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
-POPPLER_PATH = r'C:\Program Files\poppler-25.12.0\Library\bin' 
+# Descobre a raiz do projeto dinamicamente
+BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
+
+# Aponta para a pasta gerada automaticamente pelo setup_binaries.py
+POPPLER_PATH = os.path.join(BASE_DIR, 'bin', 'poppler', 'Library', 'bin') 
+pytesseract.pytesseract.tesseract_cmd = os.path.join(BASE_DIR, 'bin', 'Tesseract-OCR', 'tesseract.exe')
+
+# EXTREMAMENTE IMPORTANTE: Diz ao Tesseract onde procurar o idioma português (por.traineddata)
+os.environ["TESSDATA_PREFIX"] = os.path.join(BASE_DIR, 'bin', 'Tesseract-OCR', 'tessdata')
 
 def extract_text(file_path: str, content_type: str) -> str:
     try:

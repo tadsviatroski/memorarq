@@ -1,27 +1,23 @@
 import os
-from fastapi import FastAPI, File, UploadFile
+from fastapi import FastAPI, File, UploadFile, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-from fastapi import HTTPException
-from services.ocr_service import extract_text
-from pydantic import BaseModel # Necessário para receber o texto JSON
+from fastapi.responses import StreamingResponse, FileResponse # Adicionado FileResponse
+from pydantic import BaseModel
+import io
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import simpleSplit
-from fastapi.responses import StreamingResponse
-import io
-from services.bert_correction import bert_corrector
 
-class TextUpdate(BaseModel):
-    text: str
+from services.ocr_service import extract_text
+from services.bert_correction import bert_corrector
 
 app = FastAPI()
 
-origins = ["http://localhost:3000", "http://127.0.0.1:3000"]
-
+# Permite acesso de qualquer origem, pois agora rodará tudo junto
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"], 
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -29,7 +25,21 @@ app.add_middleware(
 
 UPLOAD_DIR = "storage/uploads"
 os.makedirs(UPLOAD_DIR, exist_ok=True)
+
+# Montagem das pastas estáticas
 app.mount("/files", StaticFiles(directory=UPLOAD_DIR), name="files")
+
+
+
+#  Rota Raiz
+#@app.get("/")
+#async def serve_frontend():
+#    return FileResponse("static/index.html")
+
+class TextUpdate(BaseModel):
+    text: str
+
+
 
 # 1. FUNÇÃO AUXILIAR PARA SALVAR TEXTO
 def save_text_file(filename: str, text: str):
@@ -255,3 +265,5 @@ async def run_ai_correction(filename: str):
     save_text_file(filename, fixed_text)
     
     return {"text": fixed_text}
+
+app.mount("/", StaticFiles(directory="static", html=True), name="static") # Monta o Frontend
