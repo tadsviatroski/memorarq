@@ -36,7 +36,7 @@ def download_file(url, dest):
 
 def setup_poppler():
     poppler_dir = os.path.join(BIN_DIR, 'poppler')
-    # 1. VERIFICAÇÃO INTELIGENTE
+    # 1. VERIFICAÇÃO DO EXECUTÁVEL
     if os.path.exists(os.path.join(poppler_dir, 'Library', 'bin', 'pdftoppm.exe')):
         return
 
@@ -86,7 +86,7 @@ def setup_tesseract():
         if os.path.exists(installer_path):
             os.remove(installer_path)
             
-        # 3. PLANO B (Caso o instalador burle o comando e instale globalmente)
+        # 3. Caso o instalador burle o comando e instale globalmente
         if not os.path.exists(tesseract_exe):
             print(" -> [AVISO] O instalador usou rota global. Copiando para a pasta portátil...")
             default_path = r"C:\Program Files\Tesseract-OCR"

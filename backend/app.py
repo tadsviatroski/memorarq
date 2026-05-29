@@ -121,7 +121,7 @@ async def re_run_ocr(filename: str):
     
     return {"text": new_text}
 
-# 6. LISTAGEM DO GERENCIADOR (Totalmente blindada contra arquivos de sistema)
+# 6. LISTAGEM DO GERENCIADOR
 @app.get("/documents")
 async def list_documents():
     """Retorna lista focada apenas na pasta de ORIGINAIS."""

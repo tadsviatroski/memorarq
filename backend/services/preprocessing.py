@@ -21,7 +21,7 @@ def preprocess_image(pil_image):
     # Remove "sujeira" digital ou manchas de scan
     no_noise = cv2.fastNlMeansDenoising(gray, None, 10, 7, 21)
 
-    # 4. Binarização (Thresholding) - O PASSO MAIS IMPORTANTE
+    # 4. Binarização (Thresholding)
     # Transforma tudo que não é texto em branco absoluto e o texto em preto absoluto.
     # Usamos o método de Otsu, que calcula o limiar ideal automaticamente.
     _, binary = cv2.threshold(no_noise, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)

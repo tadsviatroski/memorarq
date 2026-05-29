@@ -12,7 +12,7 @@ BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
 POPPLER_PATH = os.path.join(BASE_DIR, 'bin', 'poppler', 'Library', 'bin') 
 pytesseract.pytesseract.tesseract_cmd = os.path.join(BASE_DIR, 'bin', 'Tesseract-OCR', 'tesseract.exe')
 
-# EXTREMAMENTE IMPORTANTE: Diz ao Tesseract onde procurar o idioma português (por.traineddata)
+# Diz ao Tesseract onde procurar o idioma português (por.traineddata)
 os.environ["TESSDATA_PREFIX"] = os.path.join(BASE_DIR, 'bin', 'Tesseract-OCR', 'tessdata')
 
 def extract_text(file_path: str, content_type: str) -> str:
@@ -56,7 +56,7 @@ def _ocr_pdf_page(file_path, page_number):
         file_path, 
         first_page=page_number+1, 
         last_page=page_number+1, 
-        dpi=400, # <--- AUMENTADO PARA 400 DPI (Mais definição)
+        dpi=400, # AUMENTADO PARA 400 DPI 
         poppler_path=POPPLER_PATH
     )
     if images:

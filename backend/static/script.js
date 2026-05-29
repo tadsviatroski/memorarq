@@ -6,9 +6,9 @@ const editorScreen = document.getElementById('editor-screen');
 const docPreview = document.getElementById('doc-preview');
 const textEditor = document.getElementById('text-editor');
 const btnBack = document.getElementById('btn-back');
-const btnDownload = document.getElementById('btn-download'); // Referência crucial recuperada
+const btnDownload = document.getElementById('btn-download'); 
 const loadingOverlay = document.getElementById('loading-overlay');
-const loadingText = document.getElementById('loading-text'); // Referência cacheada para evitar erros
+const loadingText = document.getElementById('loading-text');
 
 // --- MODAL DE DOWNLOAD ---
 const downloadModal = document.getElementById('download-modal');
@@ -126,7 +126,7 @@ function showEditorScreen(data) {
     }
 }
 
-// --- CONTROLE DE LOADING SEGURO ---
+// --- CONTROLE DE LOADING ---
 function setLoading(active, text = "Processando...") {
     if (!loadingOverlay) return;
     
@@ -214,7 +214,7 @@ async function loadAiLogsForValidation(filename) {
     }
 }
 
-// Transformei o desenho do modal em uma função separada para poder usar no Botão do Editor e no Gerenciador
+// Transformei o desenho do modal em uma função separada
 function renderAiLogsModal(logsArray) {
     const aceitos = logsArray.filter(log => log.status === "ACEITO");
     aiLogContent.innerHTML = ""; 
@@ -523,7 +523,7 @@ if (btnAiFix) {
     });
 }
 
-// --- ABRIR HISTÓRICO DE CORREÇÕES (NOVO BOTÃO) ---
+// --- ABRIR HISTÓRICO DE CORREÇÕES ---
 if (btnViewLogs) {
     btnViewLogs.addEventListener('click', () => {
         if (currentOpenFilename && !btnViewLogs.disabled) {
