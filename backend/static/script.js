@@ -28,13 +28,17 @@ const cursorPos = document.getElementById('cursor-pos');
 const btnSaveText = document.getElementById('btn-save-text');
 const btnReOcr = document.getElementById('btn-re-ocr');
 const btnAiFix = document.getElementById('btn-ai-fix');
+const btnViewLogs = document.getElementById('btn-view-logs');
 
 // --- SIDEBAR ---
 const sidebar = document.getElementById('sidebar');
-const fileList = document.getElementById('file-list');
-const btnRefresh = document.getElementById('btn-refresh');
 const btnToggleSidebar = document.getElementById('btn-toggle-sidebar');
 const btnOpenSidebar = document.getElementById('btn-open-sidebar');
+
+const managerScreen = document.getElementById('manager-screen');
+const navUpload = document.getElementById('nav-upload');
+const navManager = document.getElementById('nav-manager');
+const managerFileList = document.getElementById('manager-file-list');
 
 // --- VARIÁVEIS DE ESTADO ---
 const API_URL = window.location.origin;
@@ -42,7 +46,6 @@ let currentOpenFilename = null;
 
 // --- INICIALIZAÇÃO ---
 window.addEventListener('DOMContentLoaded', () => {
-    loadDocuments();
 });
 
 // --- EVENTOS DE UPLOAD ---
@@ -82,28 +85,25 @@ if (btnBack) {
 // --- LÓGICA DE UPLOAD ---
 async function uploadFile(file) {
     setLoading(true, "Enviando arquivo...");
-    
     const formData = new FormData();
     formData.append('file', file);
 
     try {
-        const response = await fetch(`${API_URL}/upload`, {
-            method: 'POST',
-            body: formData
-        });
-
+        const response = await fetch(`${API_URL}/upload`, { method: 'POST', body: formData });
         if (!response.ok) throw new Error(`Erro: ${response.statusText}`);
 
         const data = await response.json();
         currentOpenFilename = data.filename;
+        
+        // Arquivo novo não tem log, garante que o botão inicie desativado
+        if (btnViewLogs) btnViewLogs.disabled = true; 
+        
         showEditorScreen(data);
-
     } catch (error) {
         console.error("ERRO:", error);
         alert("Erro ao processar o arquivo.");
     } finally {
         setLoading(false);
-        loadDocuments();
     }
 }
 
@@ -139,54 +139,100 @@ function setLoading(active, text = "Processando...") {
     }
 }
 
-// --- SIDEBAR E LISTAGEM (CORREÇÃO DO .TXT) ---
-async function loadDocuments() {
+
+
+
+// --- GERENCIADOR DE SISTEMA E VALIDAÇÃO ---
+async function loadManagerDocuments() {
     try {
         const response = await fetch(`${API_URL}/documents`);
         const files = await response.json();
-        renderFileList(files);
-    } catch (error) {
-        console.error("Erro ao listar:", error);
-    }
+        renderManagerTable(files);
+    } catch (error) { console.error("Erro ao listar:", error); }
 }
 
-function renderFileList(files) {
-    fileList.innerHTML = '';
-    
-    // FILTRO DE SEGURANÇA NO FRONTEND
-    // Remove qualquer arquivo que termine com .txt da lista visual
-    const validFiles = files.filter(file => !file.name.toLowerCase().endsWith('.txt'));
-
-    if (validFiles.length === 0) {
-        fileList.innerHTML = '<li style="padding:15px; color:#666; font-size:12px;">Nenhum arquivo.</li>';
+function renderManagerTable(files) {
+    managerFileList.innerHTML = '';
+    if (files.length === 0) {
+        managerFileList.innerHTML = '<tr><td colspan="2" style="text-align: center; color: #666;">Nenhum documento processado ainda.</td></tr>';
         return;
     }
 
-    validFiles.forEach(file => {
-        const li = document.createElement('li');
-        li.className = 'file-item';
-        li.title = file.name;
+    files.forEach(file => {
+        const tr = document.createElement('tr');
         
-        li.innerHTML = `
-            <span class="file-name">${file.name}</span>
-            <button class="btn-delete-file" title="Excluir">
-                <span class="material-symbols-outlined" style="font-size: 16px;">delete</span>
-            </button>
-        `;
-
-        li.querySelector('.file-name').addEventListener('click', () => {
+        // Coluna 1: Nome
+        const tdName = document.createElement('td');
+        tdName.innerText = file.name;
+            
+        // Coluna 2: Ações Enxutas
+        const tdActions = document.createElement('td');
+        tdActions.className = 'action-btns';
+        
+        const btnOpen = document.createElement('button');
+        btnOpen.className = 'btn-secondary';
+        btnOpen.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">edit_document</span>';
+        btnOpen.title = "Abrir no Editor";
+        btnOpen.onclick = () => {
             openDocument(file.name);
-            document.querySelectorAll('.file-item').forEach(i => i.classList.remove('active'));
-            li.classList.add('active');
-        });
+            managerScreen.classList.add('hidden'); 
+            navManager.classList.remove('active');
+        };
 
-        li.querySelector('.btn-delete-file').addEventListener('click', (e) => {
-            e.stopPropagation();
-            deleteDocument(file.name);
-        });
+        const btnDel = document.createElement('button');
+        btnDel.className = 'btn-secondary';
+        btnDel.style.color = '#d84545';
+        btnDel.innerHTML = '<span class="material-symbols-outlined" style="font-size: 16px;">delete</span>';
+        btnDel.title = "Excluir Original e Extrações";
+        btnDel.onclick = async () => {
+            await deleteDocument(file.name);
+            loadManagerDocuments();
+        };
 
-        fileList.appendChild(li);
+        tdActions.appendChild(btnOpen);
+        tdActions.appendChild(btnDel);
+
+        tr.appendChild(tdName);
+        tr.appendChild(tdActions);
+        managerFileList.appendChild(tr);
     });
+}
+
+// --- VALIDAÇÃO: BUSCA LOGS SALVOS ---
+async function loadAiLogsForValidation(filename) {
+    setLoading(true, "Buscando histórico de correção...");
+    try {
+        const response = await fetch(`${API_URL}/documents/${filename}/logs`);
+        if (response.ok) {
+            const logs = await response.json();
+            renderAiLogsModal(logs); // Reutiliza a função de desenhar os logs
+        }
+    } catch (e) {
+        alert("Erro ao buscar logs da IA.");
+    } finally {
+        setLoading(false);
+    }
+}
+
+// Transformei o desenho do modal em uma função separada para poder usar no Botão do Editor e no Gerenciador
+function renderAiLogsModal(logsArray) {
+    const aceitos = logsArray.filter(log => log.status === "ACEITO");
+    aiLogContent.innerHTML = ""; 
+    
+    if (aceitos.length === 0) {
+        aiLogContent.innerHTML = "<div class='log-empty'>Nenhum erro ortográfico detectado pelo histórico.</div>";
+    } else {
+        aceitos.forEach(log => {
+            const div = document.createElement('div');
+            div.className = "log-item log-accepted";
+            div.innerHTML = `
+                <span><span class="log-original">${log.original}</span> <span class="log-arrow">➔</span> <span class="sugestao">${log.sugestao}</span></span>
+                <span class="material-symbols-outlined" style="font-size: 16px; color: #4ec9b0;">check_circle</span>
+            `;
+            aiLogContent.appendChild(div);
+        });
+    }
+    aiLogModal.classList.remove('hidden');
 }
 
 // --- FUNÇÃO DE ABRIR DOCUMENTO ---
@@ -201,6 +247,13 @@ async function openDocument(filename) {
         currentOpenFilename = filename; 
         showEditorScreen(data);
 
+        // VERIFICA SE EXISTEM LOGS PARA ATIVAR O BOTÃO DA IA
+        const logsResponse = await fetch(`${API_URL}/documents/${filename}/logs`);
+        if (logsResponse.ok) {
+            const logs = await logsResponse.json();
+            if (btnViewLogs) btnViewLogs.disabled = (logs.length === 0);
+        }
+
     } catch (error) {
         console.error(error);
         alert("Não foi possível abrir o documento.");
@@ -214,7 +267,7 @@ async function deleteDocument(filename) {
 
     try {
         await fetch(`${API_URL}/documents/${filename}`, { method: 'DELETE' });
-        loadDocuments();
+        loadManagerDocuments();
     } catch (error) {
         alert("Erro ao excluir.");
     }
@@ -303,7 +356,6 @@ if (btnDlPdf) {
 // --- SIDEBAR TOGGLE ---
 btnToggleSidebar.addEventListener('click', toggleSidebar);
 btnOpenSidebar.addEventListener('click', toggleSidebar);
-btnRefresh.addEventListener('click', loadDocuments);
 
 function toggleSidebar() {
     sidebar.classList.toggle('closed');
@@ -313,6 +365,29 @@ function toggleSidebar() {
         btnOpenSidebar.classList.add('hidden');
     }
 }
+
+
+// --- SISTEMA DE NAVEGAÇÃO DO MENU ---
+navUpload.addEventListener('click', () => {
+    navUpload.classList.add('active');
+    navManager.classList.remove('active');
+    editorScreen.classList.add('hidden');
+    managerScreen.classList.add('hidden');
+    uploadScreen.classList.remove('hidden');
+    if(window.innerWidth < 768) toggleSidebar(); // Fecha no celular
+});
+
+navManager.addEventListener('click', () => {
+    navManager.classList.add('active');
+    navUpload.classList.remove('active');
+    uploadScreen.classList.add('hidden');
+    editorScreen.classList.add('hidden');
+    managerScreen.classList.remove('hidden');
+    loadManagerDocuments(); // Atualiza a tabela
+    if(window.innerWidth < 768) toggleSidebar(); 
+});
+
+btnBack.addEventListener('click', () => navUpload.click()); // O botão Voltar agora chama a navegação
 
 // --- FERRAMENTAS DO EDITOR (ZOOM, SAVE, OCR) ---
 // Zoom
@@ -401,12 +476,20 @@ document.addEventListener('keydown', (e) => {
     }
 });
 
-// --- AÇÃO: IA MAGIC FIX ---
+// --- ELEMENTOS DO MODAL DE LOG ---
+const aiLogModal = document.getElementById('ai-log-modal');
+const aiLogContent = document.getElementById('ai-log-content');
+const btnCloseAiLog = document.getElementById('btn-close-ai-log');
+
+if (btnCloseAiLog) {
+    btnCloseAiLog.addEventListener('click', () => aiLogModal.classList.add('hidden'));
+}
+
+// --- Correção BERTimbau (Refatorada) ---
 if (btnAiFix) {
     btnAiFix.addEventListener('click', async () => {
         if (!currentOpenFilename) return;
 
-        // Pergunta de segurança
         if (!confirm("A IA tentará corrigir erros ortográficos baseada no contexto. Isso alterará o texto atual. Continuar?")) return;
 
         setLoading(true, "A IA está lendo e corrigindo...");
@@ -418,9 +501,16 @@ if (btnAiFix) {
 
             if (response.ok) {
                 const data = await response.json();
+                
+                // 1. Atualiza o texto no editor
                 textEditor.value = data.text;
                 updateStats();
-                alert("Correção concluída! Verifique as alterações.");
+
+                if (btnViewLogs) btnViewLogs.disabled = false;
+                
+                // 2. Monta e exibe o modal chamando a função centralizada
+                renderAiLogsModal(data.logs);
+
             } else {
                 alert("Erro ao processar com IA.");
             }
@@ -429,6 +519,15 @@ if (btnAiFix) {
             alert("Erro de conexão com a IA.");
         } finally {
             setLoading(false);
+        }
+    });
+}
+
+// --- ABRIR HISTÓRICO DE CORREÇÕES (NOVO BOTÃO) ---
+if (btnViewLogs) {
+    btnViewLogs.addEventListener('click', () => {
+        if (currentOpenFilename && !btnViewLogs.disabled) {
+            loadAiLogsForValidation(currentOpenFilename);
         }
     });
 }

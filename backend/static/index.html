@@ -11,29 +11,50 @@
 
     <div class="app-layout">
         
-        <aside id="sidebar" class="sidebar">
+        <aside id="sidebar" class="sidebar closed">
             <div class="sidebar-header">
-                <span>EXPLORADOR</span>
-                <button id="btn-refresh" title="Atualizar Lista"><span class="material-symbols-outlined">refresh</span></button>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <span class="material-symbols-outlined" style="color: var(--accent-color);">dashboard</span>
+                    <span>MEMORARQ</span>
+                </div>
+                <button id="btn-toggle-sidebar" style="background: none; border: none; color: white; cursor: pointer;"><span class="material-symbols-outlined">close</span></button>
             </div>
             
-            <div class="sidebar-content">
-                <ul id="file-list">
-                    </ul>
-            </div>
-
-            <button id="btn-toggle-sidebar" class="sidebar-toggle">
-                <span class="material-symbols-outlined">chevron_left</span>
-                <span class="sidebar-label">Fechar Explorador</span>
-            </button>
+            <nav class="sidebar-nav">
+                <button id="nav-upload" class="nav-btn active">
+                    <span class="material-symbols-outlined">upload_file</span> Novo Upload
+                </button>
+                <button id="nav-manager" class="nav-btn">
+                    <span class="material-symbols-outlined">folder_managed</span> Gerenciador
+                </button>
+            </nav>
         </aside>
 
-        <button id="btn-open-sidebar" class="sidebar-trigger hidden">
+        <button id="btn-open-sidebar" class="sidebar-trigger">
             <span class="material-symbols-outlined">menu</span>
-            
         </button>
 
         <div class="main-content">
+
+            <div class="container hidden" id="manager-screen">
+                <div class="manager-box">
+                    <h2 style="margin-bottom: 5px;">Gerenciador do Sistema</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 25px;">Acesse arquivos processados e valide os relatórios de correção ortográfica da IA.</p>
+                    
+                    <div class="table-container">
+                        <table class="manager-table">
+                            <thead>
+                                <tr>
+                                    <th style="text-align: left;">Arquivo</th>
+                                    <th>Ações do Sistema</th>
+                                </tr>
+                            </thead>
+                            <tbody id="manager-file-list">
+                                </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
             <div class="container" id="upload-screen">
                 <div class="upload-box" id="drop-zone">
@@ -79,6 +100,9 @@
                                 <button class="tool-btn" id="btn-ai-fix" title="Corrigir com IA (BERTimbau)">
                                     <span class="material-symbols-outlined" style="color: #9cdcfe;">auto_fix_high</span>
                                 </button>
+                                <button class="tool-btn" id="btn-view-logs" title="Correções IA" disabled>
+                                    <span class="material-symbols-outlined" style="color: #c586c0;">history_edu</span>
+                                </button>
                                 <span class="divider-vertical"></span>
                                 <span class="divider-vertical"></span>
                                 <button class="tool-btn" id="btn-zoom-out"><span class="material-symbols-outlined">text_decrease</span></button>
@@ -118,13 +142,24 @@
             </div>
     </div>
 
-    <div id="download-modal" class="modal-overlay hidden">
-    </div>
 
     <div id="loading-overlay" class="loading-overlay hidden">
         <div class="spinner"></div>
         <p id="loading-text">Processando documento...</p>
         <span class="loading-subtext">Isso pode levar alguns segundos.</span>
+    </div>
+
+    <div id="ai-log-modal" class="modal-overlay hidden">
+        <div class="modal-box ai-log-box">
+            <h3 style="margin-bottom: 15px; color: var(--accent-color);"><span class="material-symbols-outlined" style="vertical-align: middle;">auto_fix_high</span> Relatório de Correção</h3>
+            
+            <div id="ai-log-content" class="log-container">
+                </div>
+            
+            <div style="margin-top: 20px; text-align: right;">
+                <button id="btn-close-ai-log" class="btn-primary">Concluir</button>
+            </div>
+        </div>
     </div>
     
     <script src="script.js"></script>

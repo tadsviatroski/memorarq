@@ -516,3 +516,121 @@ button {
     cursor: pointer;
 }
 .btn-text:hover { color: var(--text-primary); }
+
+
+/*----------------------------------------------------------------*/
+
+
+/* --- TELA DE LOGS DA IA --- */
+.ai-log-box {
+    width: 500px;
+    max-width: 90vw;
+    text-align: left;
+}
+
+.log-container {
+    background-color: #1e1e1e;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    padding: 10px;
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: var(--font-code);
+    font-size: 13px;
+}
+
+.log-item {
+    padding: 8px;
+    border-bottom: 1px solid #333;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.log-item:last-child { border-bottom: none; }
+
+.log-accepted .sugestao { color: #4ec9b0; font-weight: bold; } /* Verde suave */
+.log-original { color: #ce9178; text-decoration: line-through; } /* Laranja claro */
+.log-arrow { margin: 0 10px; color: #858585; }
+
+.log-empty { text-align: center; color: #858585; padding: 20px 0; }
+
+
+
+/*----------------------------------------------------------------*/
+
+
+/* --- NAVEGAÇÃO DA SIDEBAR (MENU HAMBURGUER) --- */
+.sidebar-nav {
+    padding: 15px 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.nav-btn {
+    background: transparent;
+    color: var(--text-secondary);
+    border: none;
+    padding: 12px 15px;
+    border-radius: 6px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.nav-btn:hover { background-color: #333347; color: white; }
+.nav-btn.active { background-color: var(--accent-color); color: white; }
+
+/* --- TELA DO GERENCIADOR --- */
+.manager-box {
+    background-color: var(--panel-bg);
+    border: 1px solid var(--border-color);
+    padding: 40px;
+    border-radius: 8px;
+    width: 800px;
+    max-width: 90vw;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+}
+
+.table-container {
+    background-color: #1e1e1e;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    overflow: hidden;
+}
+
+.manager-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.manager-table th {
+    background-color: #2d2d30;
+    color: var(--text-secondary);
+    font-weight: normal;
+    padding: 12px 15px;
+    font-size: 13px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.manager-table td {
+    padding: 15px;
+    border-bottom: 1px solid #333;
+    font-size: 14px;
+    color: var(--text-primary);
+    text-align: center;
+}
+
+.manager-table td:first-child { text-align: left; font-weight: bold; }
+.manager-table tr:last-child td { border-bottom: none; }
+.manager-table tr:hover { background-color: #2a2d2e; }
+
+.badge-ai { background-color: #4ec9b022; color: #4ec9b0; padding: 4px 10px; border-radius: 12px; font-size: 11px; border: 1px solid #4ec9b0; }
+.badge-none { background-color: #333; color: #888; padding: 4px 10px; border-radius: 12px; font-size: 11px; }
+
+.action-btns { display: flex; gap: 8px; justify-content: center; }
+.action-btns button { padding: 6px 12px; font-size: 12px; }
